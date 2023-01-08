@@ -7,24 +7,53 @@
     Sorry but I dont support pedos - Infinite Yield
 ]]
 
-local config = { -- default config, dont touch it boi
+
+local config = { -- default/template config, dont touch it >:C
     Name = "Fluffy", -- name of hud
     Colors = { -- colors
-        Background = Color3.fromRGB(255, 255, 255), -- background color of frames
-        AccentColor = Color3.fromRGB() -- text, button, etc. color
+        Background = Color3.new(1, 1, 1),
+        Accent = {
+            Default = Color3.new(),
+            NoBackground = Color3.new(1, 1, 1)
+        },
+        Button = {
+            Default = Color3.fromRGB(225, 225, 225),
+            Faded = Color3.fromRGB(180, 180, 180)
+        }
     },
-    FontType = Enum.Font.SourceSansLight, -- font of text
-    BackgroundImage = nil, -- Background image of frames
-    BackgroundTransparency = .2, -- Transparency of background image
-    HudElementPositions = {}, -- Position of the hud elements
-    HudElementTweenTypes = {} -- Tweens of the hud elements
+    Font = Enum.Font.SourceSansLight, -- font of text
+    BackgroundImage = nil, -- background image of frames
+    BackgroundTransparency = .2, -- transparency of background image
+    HudElement = { -- hud element values
+        Position = {
+            assetDownloadHeader = {
+                Start = UDim2.new(0, 0, -.1, 0),
+                End = UDim2.new()
+            }
+        }, -- Position of hud elements
+        Tween = {
+            assetDownloadHeader = {
+                TweenType = Enum.EasingStyle.Quad,
+                TweenDirection = Enum.EasingDirection.InOut,
+                Time = .5
+            }
+        } -- Tweens of the hud elements
+    }
 }
+local firstTimer = false
 
+local github_repo
+do
+    local creator = "Lua69"
+    local repo = "Fluffy"
+    github_repo = "https://raw.githubusercontent.com/" .. creator .. "/" .. repo .. "/main/"
+end
 
 local getasset = getsynasset or getcustomasset or function(location) -- fetch a asset from the web!
     return "rbxasset://" .. location -- daily jjsploit user XD
 end
-local cloneref = cloneref or function(g) -- cloneref to pretty much hide the instances from the game
+
+local cloneref = cloneref or function(g) -- cloneref to pretty much hide the instances from the game, (Btw I didnt make this)
     if RunService:IsStudio() then
         g.Parent = CoreGui
     end
@@ -47,7 +76,7 @@ local cloneref = cloneref or function(g) -- cloneref to pretty much hide the ins
 
     local f = {}
 
-    function f.invalidate(g)
+    function f.invalidate(g) -- gets the instances in the the object and sets them to nil
         if not InstanceList then
             return
         end
@@ -61,9 +90,11 @@ local cloneref = cloneref or function(g) -- cloneref to pretty much hide the ins
 
     return f.invalidate(g)
 end
+
 local protect_gui = syn.protect_gui or function(obj) -- Protect gui if your a synapse user
     obj.Parent = CoreGui
 end
+
 local requestfunc =
     syn and syn.request or http and http.request or http_request or fluxus and fluxus.request or request or
         function(tab) -- http request
@@ -81,39 +112,59 @@ local requestfunc =
                 }
             end
         end
+
+local writefile = writefile or function() -- Unable to writefile, pretty bad exploit man.
+    return false
+end
+
+local readfile = readfile or function() -- YOU CANT EVEN READFILE? WOW MAN
+    return false
+end
+
 local isfile = isfile or function(file) -- Detect if the file exists or not
     local suc, res = pcall(function()
         return readfile(file)
     end)
     return suc and res ~= nil
 end
-local writefile = writefile or function() -- Unable to writefile, pretty bad exploit man.
-    return
-end
-local readfile = readfile or function() -- YOU CANT EVEN READFILE? WOW MAN
-    return
+
+local realRobloxTask = task -- idk I think this works
+local task = {} -- override it with a table
+if KRNL_LOADED then -- last time I tried to use task.wait on krnl, it failed for me.
+    task.delay = realRobloxTask.delay
+    task.spawn = realRobloxTask.spawn
+    task.wait = function(t)
+        local time = t or 0.05 -- default roblox wait time is 0.05
+        local tick = tick()
+
+        repeat
+            RunService.PreRender:Wait()
+        until tick() - tick >= time
+    end
+else
+    task = realRobloxTask
 end
 
 loadstring(requestfunc({
-    Url = "https://raw.githubusercontent.com/Babyhamsta/RBLX_Scripts/main/Universal/Bypasses.lua",
+    Url = github_repo,
     Method = "GET"
 }).Body)()
+
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local CoreGui = game:GetService("CoreGui")
+local RunService = game:GetService("RunService")
+local StarterGui = game:GetService("StarterGui")
+local TweenService = game:GetService("TweenService")
 
-local Player = Players.LocalPlayer
-local cachedassets = {}
+function random(min, max) -- roblox's math.random is not really random sometimes tbh
+    return Random.new():NextInteger(min, max)
+end
 
-local math = {
-    random = function(min, max) -- roblox's math.random is not really random sometimes tbh
-        return Random.new():NextInteger(min, max)
-    end
-}
-
-function randomString(len) -- generate a random long string of text
+function randomString() -- generate a random long string of text
     local array = {}
+    local len = random(0, 100)
 
     for i = 1, len, 1 do
         array[i] = string.char(math.random(1, 128))
@@ -122,55 +173,74 @@ function randomString(len) -- generate a random long string of text
     return table.concat(array)
 end
 
+local Player = Players.LocalPlayer
+local cachedassets = {}
+local yield = task.wait
+local rblxStudio = RunService:IsStudio()
+
+if not isfolder("fluffy") then
+    firstTimer = true
+    makefolder("fluffy")
+    makefolder("fluffy/assets")
+    makefolder("fluffy/sounds")
+end
+
 if shared.FluffyHUD then
     error("Fluffy HUD seems to be already running!", 0)
     return
 end
 
-if RunService:IsStudio() then
+if rblxStudio then
     CoreGui = Player:WaitForChild("PlayerGui")
 end
 
 local gui = Instance.new("ScreenGui")
-gui.Name = randomString(math.random(0, 100))
+gui.Name = randomString()
 gui.DisplayOrder = 9e9
-gui.ZIndexBehavior = Enum.ZIndexBehavior.Global
+gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 protect_gui(gui)
 gui.Parent = cloneref(CoreGui)
+gui.Parent = game.CoreGui
 gui.OnTopOfCoreBlur = true
 shared.FluffyHUD = gui
 
-function fetchasset(path)
+function fetchAsset(path)
     if not isfile(path) then
         task.spawn(function()
-            local textlabel = Instance.new("TextLabel")
-            textlabel.Size = UDim2.new(1, 0, 0.1, 0)
-            textlabel.Text = "Downloading " .. path
-            textlabel.BackgroundTransparency = 1
-            textlabel.TextScaled = true
-            textlabel.Font = config.Font
-            textlabel.TextColor3 = config.Colors.AccentColor
-            textlabel.Position = UDim2.new(0, 0, 0, -36)
-            textlabel.Parent = gui
+            local position, tween = config.HudElement.Position.assetDownloadHeader, config.HudElement.Tween.assetDownloadHeader
 
-            repeat task.wait() until betterisfile(path)
+            local txt = Instance.new("TextLabel", gui)
+            txt.Size = UDim2.new(1, 0, 0.1, 0)
+            txt.Position = position.Start
+            txt.Text = "Downloading " .. path
+            txt.BackgroundTransparency = 1
+            txt.TextScaled = true
+            txt.Font = config.Font
+            txt.TextColor3 = config.Colors.Accent.NoBackground
 
-            textlabel:Remove()
+            TweenService:Create(txt, TweenInfo.new(tween.Time, tween.TweenType, tween.TweenDirection), {Position = position.End}):Play()
+
+            repeat
+                yield()
+            until isfile(path)
+
+            txt:Destroy()
         end)
         local req = requestfunc({
-            Url = "https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/"..path:gsub("vape/assets", "assets"),
+            Url = github_repo .. path:gsub("fluffy/", ""),
             Method = "GET"
         })
         writefile(path, req.Body)
     end
-    if cachedassets[path] == nil then
-        cachedassets[path] = getasset(path) 
+    if not cachedassets[path] then
+        cachedassets[path] = getasset(path)
     end
     return cachedassets[path]
 end
 
-function createHUDElement(tbl) -- creates a hud element
-    local img = Instance.new("ImageLabel", tbl.Parent)
+function createHUDElement() -- creates a hud element
+    local img = Instance.new("ImageLabel", gui)
+    img.Name = randomString()
     img.BackgroundTransparency = 1
     img.AnchorPoint = Vector2.new(.5, .5)
     img.ImageTransparency = config.BackgroundTransparency
@@ -178,8 +248,41 @@ function createHUDElement(tbl) -- creates a hud element
     if config.BackgroundImage then
         img.Image = config.BackgroundImage
     else
-        img.Image = 
+        img.Image = fetchAsset("fluffy/assets/WindowBlur.png")
+        img.ScaleType = Enum.ScaleType.Slice
+        img.SliceCenter = Rect.new(10, 10, 10, 10)
     end
 
     return img
 end
+
+local coreGuiNames = {
+    "TeleportGui",
+    "RobloxPromptGui",
+    "RobloxNetworkPauseNotification",
+    "DevConsoleMaster",
+    "InGameFullscreenTitleBarScreen",
+    "ThemeProvider",
+    "PlayerList",
+    "PurchasePrompt",
+    "HeadsetDisconnectedDialog",
+    "TeleportEffectGui",
+    "AvatarEditorPrompts"
+}
+
+if rblxStudio then
+    StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, false)
+    StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.EmotesMenu, true)
+else
+    for _, obj in next, CoreGui:GetChildren() do
+        for _, name in next, coreGuiNames do
+            if obj.Name == name then
+                obj.Enabled = false
+            end
+        end
+    end
+end
+
+local leaderstats = createHUDElement()
+leaderstats.Size = UDim2.new(.1, 0, .4, 0)
+leaderstats.Position = UDim2.new(.925, 0, .2, 0)
