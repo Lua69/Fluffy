@@ -22,35 +22,31 @@ end
 -- end
 
 --Text
-function AutoScaleLibrary.ScaleText()
-	for _, v in ipairs(game.Selection:Get()) do
-		if PropertyExists(v, "TextScaled") and not v:FindFirstChildWhichIsA("UITextSizeConstraint") then
-			if v.TextScaled == false then
-				local tconstraint = Instance.new("UITextSizeConstraint")
-				tconstraint.MaxTextSize = v.TextSize
-				tconstraint.Parent = v
-				v.TextScaled = true
-			elseif v.TextScaled == true then
-				local textconstraint = Instance.new("UITextSizeConstraint")
-				textconstraint.MaxTextSize = v.TextBounds.Y
-				textconstraint.Parent = v				
-			end
-			-- AutoScaleLibrary.CustomPrint("AutoScaled Text", script.Parent:WaitForChild("CustomPrint"))
+function AutoScaleLibrary.ScaleText(v)
+	if PropertyExists(v, "TextScaled") and not v:FindFirstChildWhichIsA("UITextSizeConstraint") then
+		if v.TextScaled == false then
+			local tconstraint = Instance.new("UITextSizeConstraint")
+			tconstraint.MaxTextSize = v.TextSize
+			tconstraint.Parent = v
+			v.TextScaled = true
+		elseif v.TextScaled == true then
+			local textconstraint = Instance.new("UITextSizeConstraint")
+			textconstraint.MaxTextSize = v.TextBounds.Y
+			textconstraint.Parent = v				
 		end
+		-- AutoScaleLibrary.CustomPrint("AutoScaled Text", script.Parent:WaitForChild("CustomPrint"))
 	end
 end
 
 --Position
-function AutoScaleLibrary.SetPos(params)
+function AutoScaleLibrary.SetPos(v, params)
 	--SCALE
 	if params == "Scale" then
-		for _, v in ipairs(game.Selection:Get()) do
-			if v:isA("GuiBase2d") and v.Parent and PropertyExists(v, "Position") then
-				if PropertyExists(v.Parent, "AbsoluteSize") then
-					local ScaleXPos = v.Position.X.Offset/v.Parent.AbsoluteSize.X + v.Position.X.Scale
-					local ScaleYPos = v.Position.Y.Offset/v.Parent.AbsoluteSize.Y  + v.Position.Y.Scale
-					v.Position = UDim2.new(ScaleXPos, 0, ScaleYPos, 0)
-				end
+		if v:isA("GuiBase2d") and v.Parent and PropertyExists(v, "Position") then
+			if PropertyExists(v.Parent, "AbsoluteSize") then
+				local ScaleXPos = v.Position.X.Offset/v.Parent.AbsoluteSize.X + v.Position.X.Scale
+				local ScaleYPos = v.Position.Y.Offset/v.Parent.AbsoluteSize.Y  + v.Position.Y.Scale
+				v.Position = UDim2.new(ScaleXPos, 0, ScaleYPos, 0)
 			end
 		end
 
@@ -58,14 +54,12 @@ function AutoScaleLibrary.SetPos(params)
 		-- ChangeHistoryService:SetWaypoint("Converted UI element to Scale Position")
 		--OFFSET	
 	elseif params == "Offset" then
-		for _, v in ipairs(game.Selection:Get()) do
-			if v:isA("GuiBase2d") and v.Parent and PropertyExists(v, "Position") then
-				if  PropertyExists(v.Parent, "AbsoluteSize") then
-					local OffsetXPos = v.Position.X.Scale*v.Parent.AbsoluteSize.X + v.Position.X.Offset
-					local OffsetYPos = v.Position.Y.Scale*v.Parent.AbsoluteSize.Y + v.Position.Y.Offset
-					v.Position = UDim2.new(0, OffsetXPos, 0, OffsetYPos)
-				end	
-			end
+		if v:isA("GuiBase2d") and v.Parent and PropertyExists(v, "Position") then
+			if  PropertyExists(v.Parent, "AbsoluteSize") then
+				local OffsetXPos = v.Position.X.Scale*v.Parent.AbsoluteSize.X + v.Position.X.Offset
+				local OffsetYPos = v.Position.Y.Scale*v.Parent.AbsoluteSize.Y + v.Position.Y.Offset
+				v.Position = UDim2.new(0, OffsetXPos, 0, OffsetYPos)
+			end	
 		end
 
 		-- AutoScaleLibrary.CustomPrint("Converted to Offset Pos", script.Parent:WaitForChild("CustomPrint"))
@@ -74,35 +68,31 @@ function AutoScaleLibrary.SetPos(params)
 end
 
 --Size
-function AutoScaleLibrary.SetSize(params)
+function AutoScaleLibrary.SetSize(v, params)
 	--SCALE
 	if params == "Scale" then
-		for _, v in ipairs(game.Selection:Get()) do
-			if v:isA("GuiBase2d") and PropertyExists(v, "Size") and not v.Parent:IsA("ScrollingFrame") then
-				local Viewport_Size
+		if v:isA("GuiBase2d") and PropertyExists(v, "Size") and not v.Parent:IsA("ScrollingFrame") then
+			local Viewport_Size
 
-				if PropertyExists(v.Parent, "AbsoluteSize") then
-					Viewport_Size = v.Parent.AbsoluteSize
-				elseif v:FindFirstAncestorWhichIsA("GuiObject") and PropertyExists(v:FindFirstAncestorWhichIsA("GuiObject"), "AbsoluteSize") then
-					Viewport_Size = v:FindFirstAncestorWhichIsA("GuiObject").AbsoluteSize
-				else
-					Viewport_Size = workspace.CurrentCamera.ViewportSize
-				end
-
-				local LB_Size = v.AbsoluteSize
-				v.Size = UDim2.new(LB_Size.X/Viewport_Size.X,0,LB_Size.Y/Viewport_Size.Y, 0)
+			if PropertyExists(v.Parent, "AbsoluteSize") then
+				Viewport_Size = v.Parent.AbsoluteSize
+			elseif v:FindFirstAncestorWhichIsA("GuiObject") and PropertyExists(v:FindFirstAncestorWhichIsA("GuiObject"), "AbsoluteSize") then
+				Viewport_Size = v:FindFirstAncestorWhichIsA("GuiObject").AbsoluteSize
+			else
+				Viewport_Size = workspace.CurrentCamera.ViewportSize
 			end
+
+			local LB_Size = v.AbsoluteSize
+			v.Size = UDim2.new(LB_Size.X/Viewport_Size.X,0,LB_Size.Y/Viewport_Size.Y, 0)
 		end
 
 		-- AutoScaleLibrary.CustomPrint("Converted to Scale Size", script.Parent:WaitForChild("CustomPrint"))
 		-- ChangeHistoryService:SetWaypoint("Converted UI element to Scale Size")
 		--OFFSET
 	elseif params == "Offset" then	
-		for _, v in ipairs(game.Selection:Get()) do
-			if v:isA("GuiBase2d") and PropertyExists(v, "Size")then
-				local LB_Size = v.AbsoluteSize
-				v.Size = UDim2.new(0, LB_Size.X, 0, LB_Size.Y)
-			end
+		if v:isA("GuiBase2d") and PropertyExists(v, "Size")then
+			local LB_Size = v.AbsoluteSize
+			v.Size = UDim2.new(0, LB_Size.X, 0, LB_Size.Y)
 		end
 
 		-- AutoScaleLibrary.CustomPrint("Converted to Offset Size", script.Parent:WaitForChild("CustomPrint"))
@@ -111,22 +101,20 @@ function AutoScaleLibrary.SetSize(params)
 end
 
 --Add Constraint
-function AutoScaleLibrary.AddConstraint()
-	for _, v in ipairs(game.Selection:Get()) do 
-		if v:isA("GuiBase2d") then
-			local x = v.AbsoluteSize.X
-			local y = v.AbsoluteSize.y
-			local ratio = x/y
+function AutoScaleLibrary.AddConstraint(v)
+	if v:isA("GuiBase2d") then
+		local x = v.AbsoluteSize.X
+		local y = v.AbsoluteSize.y
+		local ratio = x/y
 
-			if v:FindFirstChildWhichIsA("UIAspectRatioConstraint") then
-				v:FindFirstChildWhichIsA("UIAspectRatioConstraint").AspectRatio = ratio
-				-- AutoScaleLibrary.CustomPrint("Edited UIAspectRatio constraint", script.Parent:WaitForChild("CustomPrint"))	
-			else
-				local constraint = Instance.new("UIAspectRatioConstraint")
-				constraint.Parent = v
-				constraint.AspectRatio = ratio
-				-- AutoScaleLibrary.CustomPrint("Added UIAspectRatio constraint", script.Parent:WaitForChild("CustomPrint"))	
-			end
+		if v:FindFirstChildWhichIsA("UIAspectRatioConstraint") then
+			v:FindFirstChildWhichIsA("UIAspectRatioConstraint").AspectRatio = ratio
+			-- AutoScaleLibrary.CustomPrint("Edited UIAspectRatio constraint", script.Parent:WaitForChild("CustomPrint"))	
+		else
+			local constraint = Instance.new("UIAspectRatioConstraint")
+			constraint.Parent = v
+			constraint.AspectRatio = ratio
+			-- AutoScaleLibrary.CustomPrint("Added UIAspectRatio constraint", script.Parent:WaitForChild("CustomPrint"))	
 		end
 	end
 	-- ChangeHistoryService:SetWaypoint("Added Constraints to UI elements")

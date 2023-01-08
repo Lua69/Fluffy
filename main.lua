@@ -145,12 +145,6 @@ else
     task = realRobloxTask
 end
 
-loadstring(requestfunc({
-    Url = github_repo,
-    Method = "GET"
-}).Body)()
-
-
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local CoreGui = game:GetService("CoreGui")
@@ -204,8 +198,21 @@ gui.Parent = game.CoreGui
 gui.OnTopOfCoreBlur = true
 shared.FluffyHUD = gui
 
+function fetchModule(module)
+    return loadstring(requestfunc({
+        Url = github_repo .. "modules/" .. module .. ".lua",
+        Method = "GET"
+    }).Body)
+end
+
+local scaleUI = fetchModule("AutoScaleLibrary")
+
+function PropertyExists(obj, prop)
+	return ({pcall(function()if(typeof(obj[prop])=="Instance")then error()end end)})[1]
+end
+
 function fetchAsset(path)
-    if not isfile(path) then
+    if not isfile(path) then    
         task.spawn(function()
             local position, tween = config.HudElement.Position.assetDownloadHeader, config.HudElement.Tween.assetDownloadHeader
 
@@ -236,6 +243,12 @@ function fetchAsset(path)
         cachedassets[path] = getasset(path)
     end
     return cachedassets[path]
+end
+
+function recalibrateGUIObject(obj)
+    scaleUI.SetSize(obj, "Scale")
+    scaleUI.SetPosition(obj, "Scale")
+    scaleUI.ScaleText(obj)
 end
 
 function createHUDElement() -- creates a hud element
@@ -283,6 +296,12 @@ else
     end
 end
 
+-- coregui bypasses
+if not rblxStudio then
+    fetchModule("Bypasses")()
+end
+
 local leaderstats = createHUDElement()
 leaderstats.Size = UDim2.new(.1, 0, .4, 0)
 leaderstats.Position = UDim2.new(.925, 0, .2, 0)
+recalibrateGUIObject(leaderstats)
