@@ -168,6 +168,7 @@ function randomString() -- generate a random long string of text
 end
 
 local Player = Players.LocalPlayer
+local Mouse = Player:GetMouse()
 local cachedassets = {}
 local yield = task.wait
 local rblxStudio = RunService:IsStudio()
@@ -206,6 +207,7 @@ function fetchModule(module)
 end
 
 local scaleUI = fetchModule("AutoScaleLibrary")
+local RippleClick = fetchModule("RippleEffect")
 
 function PropertyExists(obj, prop)
 	return ({pcall(function()if(typeof(obj[prop])=="Instance")then error()end end)})[1]
@@ -249,10 +251,18 @@ function recalibrateGUIObject(obj)
     scaleUI.SetSize(obj, "Scale")
     scaleUI.SetPosition(obj, "Scale")
     scaleUI.ScaleText(obj)
+
+    for _, descendant in next, obj:GetDescendants() do
+        scaleUI.SetSize(descendant, "Scale")
+        scaleUI.SetPosition(descendant, "Scale")
+        scaleUI.ScaleText(descendant)
+    end
 end
 
-function createHUDElement() -- creates a hud element
-    local img = Instance.new("ImageLabel", gui)
+local create = {}
+
+create.frame = function(parent) -- creates a frame hud element
+    local img = Instance.new("ImageLabel", nil)
     img.Name = randomString()
     img.BackgroundTransparency = 1
     img.AnchorPoint = Vector2.new(.5, .5)
@@ -267,6 +277,40 @@ function createHUDElement() -- creates a hud element
     end
 
     return img
+end
+
+create.btn = function(info)
+    local btn = Instance.new("TextButton", nil)
+    btn.Name = randomString()
+    btn.BackgroundColor3 = config.Colors.Button.Default
+    btn.Text = ""
+    btn.AnchorPoint = Vector2.new(.5, .5)
+    btn.TextTransparency = 1
+
+    local txt = Instance.new("TextLabel", btn)
+    txt.BackgroundTransparency = 1
+    txt.Size = UDim2.new(1, 0, 1, 0)
+    txt.Text = info.Text
+    txt.Font = config.Font
+    txt.TextSize = info.TextSize
+    txt.TextColor3 = config.Colors.Accent.Default
+
+    btn.AutoButtonColor = false
+    btn.MouseEnter:Connect(function()
+        RippleClick(btn, Mouse.X, Mouse.Y)
+    end)
+
+    return btn
+end
+
+create.scroll = function(info)
+    local scroll = Instance.new("ScrollingFrame", nil)
+    scroll.BackgroundTransparency = 1
+    scroll.ScrollBarImageTransparency = 1
+    scroll.CanvasSize = UDim2.new()
+    scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+
+    return scroll
 end
 
 local coreGuiNames = {
@@ -285,7 +329,7 @@ local coreGuiNames = {
 
 if rblxStudio then
     StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, false)
-    StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.EmotesMenu, true)
+    StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.EmotesMenu, true) -- emote gui left regular since I don't know how to make a custom one
 else
     for _, obj in next, CoreGui:GetChildren() do
         for _, name in next, coreGuiNames do
@@ -301,7 +345,9 @@ if not rblxStudio then
     fetchModule("Bypasses")()
 end
 
-local leaderstats = createHUDElement()
+local leaderstats = create.frame()
+leaderstats.Parent = gui
 leaderstats.Size = UDim2.new(.1, 0, .4, 0)
-leaderstats.Position = UDim2.new(.925, 0, .2, 0)
+leaderstats.Position = UDim2.new(.945, 0, .045, 0)
+
 recalibrateGUIObject(leaderstats)
